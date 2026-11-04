@@ -130,7 +130,7 @@ end
 -- Interruptor con nombre: una palanquita que se mueve y cambia de color. Devuelve el botón.
 function UiKit.toggle(parent: Instance, labelText: string, initial: boolean, onChanged: (value: boolean) -> ()): TextButton
 	local button = UiKit.blockButton(parent, "", 16, Theme.Paper, Theme.Ink)
-	button.Size = UDim2.fromOffset(0, 40)
+	button.Size = UDim2.fromOffset(0, 48)
 	button.AutomaticSize = Enum.AutomaticSize.X
 
 	local padding = Instance.new("UIPadding")

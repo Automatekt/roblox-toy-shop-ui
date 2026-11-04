@@ -277,6 +277,7 @@ local function buildSpawn(parent: Instance)
 	spawnPad.Neutral = true
 	spawnPad.Duration = 0
 	spawnPad.Transparency = 1
+	spawnPad.CanCollide = false -- invisible y sin estorbar: el jugador aparece a ras del suelo
 	for _, child in spawnPad:GetChildren() do
 		if child:IsA("Decal") then
 			child:Destroy() -- la calcomanía que Roblox le pone por defecto

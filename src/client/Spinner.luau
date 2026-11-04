@@ -15,6 +15,7 @@ type Entry = {
 	axis: Vector3,
 	bob: number,
 	phase: number,
+	resting: boolean, -- ya está en su posición base (con "menos movimiento")
 }
 
 local AXES: { [string]: Vector3 } = {
@@ -42,6 +43,7 @@ local function register(instance: Instance)
 		axis = AXES[if type(axisName) == "string" then axisName else "Y"] or Vector3.yAxis,
 		bob = if type(bob) == "number" then bob else 0,
 		phase = math.random() * 2 * math.pi, -- para que no suban y bajen todas a la vez
+		resting = false,
 	}
 end
 
@@ -67,6 +69,14 @@ function Spinner.start()
 				entries[instance] = nil
 				continue
 			end
+			if still then
+				if not entry.resting then
+					instance:PivotTo(entry.base)
+					entry.resting = true
+				end
+				continue
+			end
+			entry.resting = false
 			local angle = if still then 0 else entry.speed * now
 			local lift = if still then 0 else math.sin(now * BOB_SPEED + entry.phase) * entry.bob
 			local position = entry.base.Position + Vector3.new(0, lift, 0)

@@ -55,20 +55,20 @@ function ShopCard.new(parent: Instance, entry: ShopCatalog.Entry, layoutOrder: n
 
 	local preview = ToyPreview.new(button)
 	preview.viewport.Position = UDim2.fromOffset(6, 6)
-	preview.viewport.Size = UDim2.new(1, -12, 0.48, 0)
+	preview.viewport.Size = UDim2.new(1, -12, 0.46, 0)
 	preview.show(entry.ItemId)
 
 	local name = UiKit.label(button, info.DisplayName, 16, Theme.Ink, Theme.TitleFont)
-	name.Position = UDim2.new(0, 6, 0.5, 0)
-	name.Size = UDim2.new(1, -12, 0.29, 0)
+	name.Position = UDim2.new(0, 6, 0.49, 0)
+	name.Size = UDim2.new(1, -12, 0.31, 0)
 	name.TextXAlignment = Enum.TextXAlignment.Center
 	name.TextYAlignment = Enum.TextYAlignment.Center
 
 	-- Precio: moneda y número, centrados
 	local priceRow = Instance.new("Frame")
 	priceRow.BackgroundTransparency = 1
-	priceRow.Position = UDim2.new(0, 6, 0.79, 0)
-	priceRow.Size = UDim2.new(1, -12, 0.19, 0)
+	priceRow.Position = UDim2.new(0, 6, 0.81, 0)
+	priceRow.Size = UDim2.new(1, -12, 0.17, 0)
 	priceRow.Parent = button
 	local rowLayout = Instance.new("UIListLayout")
 	rowLayout.FillDirection = Enum.FillDirection.Horizontal

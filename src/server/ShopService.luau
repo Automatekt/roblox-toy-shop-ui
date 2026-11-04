@@ -106,9 +106,12 @@ local function handlePurchase(player: Player, itemId: any, extraArgs: number): R
 	if CurrencyService.spendCoins(player, entry.Price) ~= "Ok" then
 		return "Error"
 	end
-	if InventoryService.addItem(player, entry.ItemId, 1) ~= "Ok" then
+	local delivered, deliveryResult = pcall(InventoryService.addItem, player, entry.ItemId, 1)
+	if not delivered or deliveryResult ~= "Ok" then
 		-- No debería pasar, porque ya se comprobó el espacio. Por seguridad se devuelve el dinero.
-		CurrencyService.addCoins(player, entry.Price)
+		if CurrencyService.addCoins(player, entry.Price) ~= "Ok" then
+			warn("[ShopService] no se pudo devolver el dinero a " .. player.Name .. " tras una entrega fallida")
+		end
 		return "Error"
 	end
 

@@ -43,8 +43,7 @@
           0.8588
         ],
         "GlobalShadows": true,
-        "ShadowSoftness": 0.25,
-        "Outlines": false
+        "ShadowSoftness": 0.25
       },
       "Atmosphere": {
         "$className": "Atmosphere",

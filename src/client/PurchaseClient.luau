@@ -16,8 +16,9 @@ function PurchaseClient.buy(itemId: string): Result
 	if remote == nil or not remote:IsA("RemoteFunction") then
 		return "Error"
 	end
+	local remoteFunction = remote :: RemoteFunction
 	local ok, result = pcall(function()
-		return remote:InvokeServer(itemId)
+		return remoteFunction:InvokeServer(itemId)
 	end)
 	if not ok or type(result) ~= "string" then
 		return "Error"

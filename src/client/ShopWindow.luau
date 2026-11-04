@@ -23,8 +23,8 @@ local ShopCard = require(script.Parent.ShopCard)
 local ShopDetail = require(script.Parent.ShopDetail)
 local UiKit = require(script.Parent.UiKit)
 
-local HEADER_HEIGHT = 44
-local BOTTOM_ROW = 40 -- alto de cada fila de la barra de abajo
+local HEADER_HEIGHT = 48
+local BOTTOM_ROW = 48 -- alto de cada fila de la barra de abajo
 local BOTTOM_NARROW_WIDTH = 400 -- por debajo de este ancho los interruptores van en dos filas
 local GAP = 10
 local TABS_WIDTH = 112
@@ -32,7 +32,8 @@ local MIN_CARD_WIDTH = 108
 local CARD_GAP = 8
 local GRID_PADDING = 6
 local CLOSE_ACTION = "CloseShop"
-local MIN_REQUEST_INTERVAL = 0.45 -- segundos entre dos compras desde este cliente (el servidor también limita)
+local MIN_REQUEST_INTERVAL = 1.1 -- segundos entre dos compras desde este cliente: siempre más que el cooldown del servidor (1 s)
+local CONFIRM_DELAY = 0.6 -- el segundo toque cuenta como confirmación solo pasado este tiempo: un doble toque por costumbre no compra
 local TOAST_SECONDS = 2.6
 
 local ShopWindow = {}
@@ -108,7 +109,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 	header.Parent = content
 
 	local title = UiKit.label(header, "Taller de juguetes", 30, Theme.Ink, Theme.TitleFont)
-	title.Size = UDim2.new(1, -60, 1, 0)
+	title.Size = UDim2.new(1, -64, 1, 0)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextWrapped = false
 
@@ -116,7 +117,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 	closeButton.Name = "Close"
 	closeButton.AnchorPoint = Vector2.new(1, 0.5)
 	closeButton.Position = UDim2.new(1, 0, 0.5, 0)
-	closeButton.Size = UDim2.fromOffset(44, 44)
+	closeButton.Size = UDim2.fromOffset(48, 48)
 
 	-- Cuerpo: categorías, cuadrícula y detalle (se acomodan en layoutBody)
 	local body = Instance.new("Frame")
@@ -256,12 +257,14 @@ function ShopWindow.start(hudGui: ScreenGui)
 	local tabs: { [string]: TextButton } = {}
 
 	local previewAngle = 0.5
+	local selectedAt = -math.huge
 
 	local function selectItem(itemId: string?)
 		if selectedId and cards[selectedId] then
 			cards[selectedId].setSelected(false)
 		end
 		selectedId = itemId
+		selectedAt = os.clock()
 		if itemId == nil then
 			detail.showPlaceholder()
 			return
@@ -282,7 +285,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 		end
 		if selectedId ~= itemId then
 			selectItem(itemId)
-		else
+		elseif os.clock() - selectedAt >= CONFIRM_DELAY then
 			attemptBuy(itemId)
 		end
 	end
@@ -305,7 +308,11 @@ function ShopWindow.start(hudGui: ScreenGui)
 	end
 
 	function attemptBuy(itemId: string)
-		if pending or os.clock() - lastRequest < MIN_REQUEST_INTERVAL then
+		if pending then
+			return
+		end
+		if os.clock() - lastRequest < MIN_REQUEST_INTERVAL then
+			showToast(PurchaseClient.messageFor("Cooldown", "", 0), false)
 			return
 		end
 		local entry = ShopCatalog.get(itemId)

@@ -12,8 +12,11 @@ local WorkshopLayout = require(script.Parent.WorkshopLayout)
 local TOKEN_VALUE = 15 -- monedas por ficha
 local RESPAWN_SECONDS = 20
 local MAX_PICKUP_DISTANCE = 9 -- el servidor mide la distancia: no se confía en el toque solo
+local MIN_PICKUP_INTERVAL = 0.5 -- segundos entre dos fichas del mismo jugador: frena el vaciado en ráfaga
 local TOKEN_HEIGHT = 3
 local TOKEN_DIAMETER = 2.4
+
+local lastPickup: { [Player]: number } = {}
 
 local TokenService = {}
 
@@ -65,12 +68,18 @@ local function connectPickup(token: Part)
 			return
 		end
 
+		local now = os.clock()
+		if now - (lastPickup[player] or -math.huge) < MIN_PICKUP_INTERVAL then
+			return -- la ficha se queda; podrá recogerla un instante después
+		end
+
 		-- Se marca como tomada ANTES de sumar, para que dos toques seguidos no la cuenten dos veces
 		setAvailable(token, false)
 		if CurrencyService.addCoins(player, TOKEN_VALUE) ~= "Ok" then
 			setAvailable(token, true) -- saldo al tope o sin datos: la ficha se queda para después
 			return
 		end
+		lastPickup[player] = now
 		task.delay(RESPAWN_SECONDS, function()
 			if token.Parent ~= nil then
 				setAvailable(token, true)
@@ -83,6 +92,10 @@ function TokenService.start()
 	local folder = Instance.new("Folder")
 	folder.Name = "Tokens"
 	folder.Parent = workspace
+
+	Players.PlayerRemoving:Connect(function(player: Player)
+		lastPickup[player] = nil
+	end)
 
 	for _, spot in WorkshopLayout.TokenSpots do
 		local token = buildToken(folder, spot)
