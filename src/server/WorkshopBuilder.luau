@@ -238,6 +238,13 @@ local function buildShelves(parent: Instance)
 			newPart(parent, "ShelfPost", Vector3.new(2.4, 12, 0.5), CFrame.new(frontX, 6, z), Theme.WoodDark, Enum.Material.Wood, false)
 		end
 
+		-- Un solo bloque invisible hace sólida toda la estantería: una pieza en vez de muchas
+		-- y no se puede atravesar ni subir (mide más alto que un salto)
+		local collider = newPart(parent, "ShelfCollider", Vector3.new(2.8, 12, 23.4), CFrame.new(wallX - side * 1.4, 6, 0), Theme.WoodDark, Enum.Material.Wood, true)
+		collider.Transparency = 1
+		collider.CanQuery = false
+		collider.CastShadow = false
+
 		-- Los juguetes miran hacia el centro del cuarto
 		local yaw = if side == -1 then PI / 2 else -PI / 2
 		local toys = toysBySide[side]
