@@ -9,11 +9,14 @@ local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local DataAttributes = require(ReplicatedStorage.Shared.DataAttributes)
 local ItemCatalog = require(ReplicatedStorage.Shared.ItemCatalog)
 local ShopCatalog = require(ReplicatedStorage.Shared.ShopCatalog)
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local GearDecor = require(script.Parent.GearDecor)
+local Motion = require(script.Parent.Motion)
 local PurchaseClient = require(script.Parent.PurchaseClient)
 local ShopCard = require(script.Parent.ShopCard)
 local ShopDetail = require(script.Parent.ShopDetail)
@@ -68,6 +71,15 @@ function ShopWindow.start(hudGui: ScreenGui)
 	limit.MaxSize = Vector2.new(940, 600)
 	limit.MinSize = Vector2.new(280, 220)
 	limit.Parent = window
+
+	local windowScale = Instance.new("UIScale")
+	windowScale.Parent = window
+
+	-- Engranajes tenues de fondo, detrás de todo lo demás, girando muy despacio
+	local gears = {
+		GearDecor.new(window, UDim2.fromScale(0.88, 0.8), 0.2, 55),
+		GearDecor.new(window, UDim2.fromScale(0.1, 0.18), 0.14, -42),
+	}
 
 	-- Una línea fina por dentro, como la costura de una caja de cartón
 	local stitch = Instance.new("Frame")
@@ -172,6 +184,8 @@ function ShopWindow.start(hudGui: ScreenGui)
 	local toastLimit = Instance.new("UISizeConstraint")
 	toastLimit.MaxSize = Vector2.new(520, 120)
 	toastLimit.Parent = toast
+	local toastScale = Instance.new("UIScale")
+	toastScale.Parent = toast
 	local toastLabel = UiKit.label(toast, "", 20, Theme.Ink, Theme.TitleFont)
 	toastLabel.AutomaticSize = Enum.AutomaticSize.XY
 	toastLabel.Size = UDim2.fromOffset(0, 0)
@@ -200,7 +214,9 @@ function ShopWindow.start(hudGui: ScreenGui)
 		local mine = toastToken
 		toastLabel.Text = text
 		toast.BackgroundColor3 = if good then Theme.Mint else Theme.Sunflower
+		toastScale.Scale = 0.9
 		toast.Visible = true
+		Motion.tween(toastScale, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
 		task.delay(TOAST_SECONDS, function()
 			if toastToken == mine then
 				toast.Visible = false
@@ -220,6 +236,8 @@ function ShopWindow.start(hudGui: ScreenGui)
 	local cards: { [string]: ShopCard.Card } = {}
 	local tabs: { [string]: TextButton } = {}
 
+	local previewAngle = 0.5
+
 	local function selectItem(itemId: string?)
 		if selectedId and cards[selectedId] then
 			cards[selectedId].setSelected(false)
@@ -233,6 +251,8 @@ function ShopWindow.start(hudGui: ScreenGui)
 		local entry = ShopCatalog.get(itemId)
 		if entry then
 			detail.showEntry(entry, getOwned(itemId), getCoins())
+			previewAngle = 0.5 -- un ángulo agradable de tres cuartos; con movimiento empieza a girar desde ahí
+			detail.preview.setAngle(previewAngle)
 		end
 	end
 
@@ -292,6 +312,9 @@ function ShopWindow.start(hudGui: ScreenGui)
 			local text, good = PurchaseClient.messageFor(result, info.DisplayName, missing)
 			showToast(text, good)
 			refresh()
+			if result == "Ok" and cards[itemId] then
+				cards[itemId].pop()
+			end
 		end)
 	end
 
@@ -300,8 +323,15 @@ function ShopWindow.start(hudGui: ScreenGui)
 		for tabId, tab in tabs do
 			tab.BackgroundColor3 = if tabId == categoryId then Theme.Sunflower else Theme.Paper
 		end
-		for _, card in cards do
-			card.button.Visible = card.category == categoryId
+		local shown = 0
+		for _, entry in ShopCatalog.Entries do
+			local card = cards[entry.ItemId]
+			local visible = card.category == categoryId
+			card.root.Visible = visible
+			if visible then
+				card.playEnter(math.min(shown, 8) * 0.045)
+				shown += 1
+			end
 		end
 		selectItem(nil)
 		grid.CanvasPosition = Vector2.zero
@@ -367,8 +397,54 @@ function ShopWindow.start(hudGui: ScreenGui)
 		end
 	end
 
+	-- La vista previa gira despacio mientras la ventana está abierta (quieta con "menos movimiento")
+	local rotator: RBXScriptConnection? = nil
+
+	local function startBackground()
+		if not Motion.isReduced() then
+			for _, gear in gears do
+				gear.start()
+			end
+		end
+		if rotator == nil then
+			rotator = RunService.Heartbeat:Connect(function(dt: number)
+				if selectedId == nil or Motion.isReduced() then
+					return
+				end
+				previewAngle += dt * 0.9
+				detail.preview.setAngle(previewAngle)
+			end)
+		end
+	end
+
+	local function stopBackground()
+		for _, gear in gears do
+			gear.stop()
+		end
+		if rotator then
+			rotator:Disconnect()
+			rotator = nil
+		end
+	end
+
+	-- Si se cambia la opción con la ventana abierta, el fondo se adapta al momento
+	Motion.onChanged(function(reduced: boolean)
+		if not gui.Enabled then
+			return
+		end
+		if reduced then
+			for _, gear in gears do
+				gear.stop()
+			end
+		else
+			startBackground()
+		end
+	end)
+
+	-- Cerrar es rápido: no hay que esperar nada para volver al juego
 	local function close()
 		gui.Enabled = false
+		stopBackground()
 		GuiService.SelectedObject = nil
 		ContextActionService:UnbindAction(CLOSE_ACTION)
 	end
@@ -396,9 +472,14 @@ function ShopWindow.start(hudGui: ScreenGui)
 			return
 		end
 		gui.Enabled = true
+		dim.BackgroundTransparency = 1
+		windowScale.Scale = 0.92
+		Motion.tween(dim, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0.45 })
+		Motion.tween(windowScale, TweenInfo.new(0.26, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
 		setCategory(category)
 		refresh()
 		layoutBody()
+		startBackground()
 		ContextActionService:BindAction(CLOSE_ACTION, onCloseAction, false, Enum.KeyCode.ButtonB)
 		if UiKit.isGamepadActive() then
 			GuiService.SelectedObject = firstFocusTarget()
