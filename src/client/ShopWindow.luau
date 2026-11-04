@@ -4,6 +4,8 @@
 -- izquierda y el detalle a la derecha; en pantallas angostas lo apila todo hacia abajo.
 -- El cliente solo pide "comprar este id"; el servidor decide si se puede.
 
+local ContextActionService = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -24,6 +26,7 @@ local TABS_WIDTH = 112
 local MIN_CARD_WIDTH = 108
 local CARD_GAP = 8
 local GRID_PADDING = 6
+local CLOSE_ACTION = "CloseShop"
 local MIN_REQUEST_INTERVAL = 0.45 -- segundos entre dos compras desde este cliente (el servidor también limita)
 local TOAST_SECONDS = 2.6
 
@@ -366,6 +369,26 @@ function ShopWindow.start(hudGui: ScreenGui)
 
 	local function close()
 		gui.Enabled = false
+		GuiService.SelectedObject = nil
+		ContextActionService:UnbindAction(CLOSE_ACTION)
+	end
+
+	-- Con mando, el botón B cierra la tienda mientras está abierta
+	local function onCloseAction(_: string, state: Enum.UserInputState): Enum.ContextActionResult
+		if state == Enum.UserInputState.Begin then
+			close()
+		end
+		return Enum.ContextActionResult.Sink
+	end
+
+	-- A dónde va el foco al abrir con mando: el primer juguete de la categoría
+	local function firstFocusTarget(): GuiObject
+		for _, entry in ShopCatalog.Entries do
+			if entry.Category == category then
+				return cards[entry.ItemId].button
+			end
+		end
+		return closeButton
 	end
 
 	local function open()
@@ -376,6 +399,10 @@ function ShopWindow.start(hudGui: ScreenGui)
 		setCategory(category)
 		refresh()
 		layoutBody()
+		ContextActionService:BindAction(CLOSE_ACTION, onCloseAction, false, Enum.KeyCode.ButtonB)
+		if UiKit.isGamepadActive() then
+			GuiService.SelectedObject = firstFocusTarget()
+		end
 	end
 
 	closeButton.Activated:Connect(close)

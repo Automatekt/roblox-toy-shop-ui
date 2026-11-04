@@ -3,6 +3,7 @@
 -- dibujada y el efecto de "botón que se hunde" al pulsarlo.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local Motion = require(script.Parent.Motion)
@@ -73,6 +74,20 @@ function UiKit.coinIcon(parent: Instance, size: number): Frame
 	return coin
 end
 
+-- Quita el recuadro blanco que Roblox dibuja al enfocar un botón con el mando: cada
+-- botón muestra el foco a su manera (contorno de color), igual que con el cursor.
+function UiKit.hideDefaultFocus(button: GuiButton)
+	local none = Instance.new("Frame")
+	none.BackgroundTransparency = 1
+	none.BorderSizePixel = 0
+	button.SelectionImageObject = none
+end
+
+-- ¿Se está jugando con mando ahora mismo?
+function UiKit.isGamepadActive(): boolean
+	return string.sub(UserInputService:GetLastInputType().Name, 1, 7) == "Gamepad"
+end
+
 -- Botón de bloque: fondo de color, contorno, texto grande. Se hunde un poco al pulsarlo.
 function UiKit.blockButton(parent: Instance, text: string, textSize: number, color: Color3, textColor: Color3): TextButton
 	local button = Instance.new("TextButton")
@@ -84,8 +99,30 @@ function UiKit.blockButton(parent: Instance, text: string, textSize: number, col
 	button.TextColor3 = textColor
 	button.Text = text
 	UiKit.corner(button, 14)
-	UiKit.stroke(button, 3)
+	local stroke = UiKit.stroke(button, 3)
 	UiKit.pressable(button)
+	UiKit.hideDefaultFocus(button)
+
+	-- Foco con cursor (solo si hay mouse) o con mando: el contorno se pone azul y más grueso
+	local function setFocus(focused: boolean)
+		stroke.Color = if focused then Theme.Sky else Theme.Ink
+		stroke.Thickness = if focused then 5 else 3
+	end
+	button.MouseEnter:Connect(function()
+		if UserInputService.MouseEnabled then
+			setFocus(true)
+		end
+	end)
+	button.MouseLeave:Connect(function()
+		setFocus(false)
+	end)
+	button.SelectionGained:Connect(function()
+		setFocus(true)
+	end)
+	button.SelectionLost:Connect(function()
+		setFocus(false)
+	end)
+
 	button.Parent = parent
 	return button
 end

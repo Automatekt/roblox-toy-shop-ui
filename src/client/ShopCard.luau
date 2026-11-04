@@ -3,6 +3,7 @@
 -- una etiqueta. Un toque la selecciona; un segundo toque confirma (lo decide ShopWindow).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local ItemCatalog = require(ReplicatedStorage.Shared.ItemCatalog)
 local ShopCatalog = require(ReplicatedStorage.Shared.ShopCatalog)
@@ -100,6 +101,28 @@ function ShopCard.new(parent: Instance, entry: ShopCatalog.Entry, layoutOrder: n
 			button.BackgroundColor3 = Theme.Paper
 		end
 	end
+
+	-- Tres formas de "enfocar" una tarjeta, todas con el mismo aspecto:
+	-- cursor encima (mouse), selección con el mando, o elegida con un toque (selected)
+	UiKit.hideDefaultFocus(button)
+	button.MouseEnter:Connect(function()
+		if UserInputService.MouseEnabled then
+			highlighted = true
+			refreshLook()
+		end
+	end)
+	button.MouseLeave:Connect(function()
+		highlighted = false
+		refreshLook()
+	end)
+	button.SelectionGained:Connect(function()
+		highlighted = true
+		refreshLook()
+	end)
+	button.SelectionLost:Connect(function()
+		highlighted = false
+		refreshLook()
+	end)
 
 	button.Activated:Connect(function()
 		onActivate(entry.ItemId)
