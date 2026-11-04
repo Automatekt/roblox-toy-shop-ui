@@ -1,0 +1,60 @@
+--!strict
+-- Única puerta para sumar o gastar monedas. Solo el servidor la usa.
+-- Cada función valida la cantidad antes de tocar el saldo, así un valor raro
+-- (negativo, texto, NaN, infinito, decimales) nunca llega a los datos guardados.
+
+local DataService = require(script.Parent.DataService)
+local DataReplicator = require(script.Parent.DataReplicator)
+local Validation = require(script.Parent.Validation)
+
+local MAX_COINS = 1_000_000_000
+
+export type Result = "Ok" | "NoData" | "InvalidAmount" | "NotEnoughCoins" | "OverCap"
+
+local CurrencyService = {}
+
+local isValidAmount = Validation.isValidAmount
+
+function CurrencyService.getCoins(player: Player): number?
+	local data = DataService.getData(player)
+	if data == nil then
+		return nil
+	end
+	return data.Coins
+end
+
+-- Suma monedas. Si el saldo pasara del tope, no suma nada y devuelve "OverCap".
+function CurrencyService.addCoins(player: Player, amount: any): Result
+	if not isValidAmount(amount) then
+		return "InvalidAmount"
+	end
+	local data = DataService.getData(player)
+	if data == nil then
+		return "NoData"
+	end
+	if data.Coins + amount > MAX_COINS then
+		return "OverCap"
+	end
+	data.Coins += amount
+	DataReplicator.syncCoins(player)
+	return "Ok"
+end
+
+-- Gasta monedas. Si no alcanzan, no cambia nada.
+function CurrencyService.spendCoins(player: Player, amount: any): Result
+	if not isValidAmount(amount) then
+		return "InvalidAmount"
+	end
+	local data = DataService.getData(player)
+	if data == nil then
+		return "NoData"
+	end
+	if data.Coins < amount then
+		return "NotEnoughCoins"
+	end
+	data.Coins -= amount
+	DataReplicator.syncCoins(player)
+	return "Ok"
+end
+
+return CurrencyService
