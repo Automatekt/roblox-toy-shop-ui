@@ -119,7 +119,7 @@ local function build(prompt: ProximityPrompt, inputType: Enum.ProximityPromptInp
 	hit.Text = ""
 	hit.ZIndex = 5
 	hit.AutoButtonColor = false
-	hit.Parent = panel
+	hit.Parent = gui -- fuera del panel: dentro, la lista de colocación lo trataría como un elemento más y empujaría el texto fuera
 	hit.InputBegan:Connect(function(input: InputObject)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			prompt:InputHoldBegin()

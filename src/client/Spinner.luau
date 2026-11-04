@@ -30,21 +30,44 @@ local entries: { [PVInstance]: Entry } = {}
 
 local Spinner = {}
 
-local function register(instance: Instance)
-	if not instance:IsA("PVInstance") or entries[instance] ~= nil then
+local function addEntry(instance: PVInstance)
+	if entries[instance] ~= nil then
 		return
 	end
 	local speed = instance:GetAttribute("SpinSpeed")
 	local axisName = instance:GetAttribute("SpinAxis")
 	local bob = instance:GetAttribute("Bob")
+	local savedBase = instance:GetAttribute("SpinBase")
 	entries[instance] = {
-		base = instance:GetPivot(),
+		base = if typeof(savedBase) == "CFrame" then savedBase else instance:GetPivot(),
 		speed = math.rad(if type(speed) == "number" then speed else 20),
 		axis = AXES[if type(axisName) == "string" then axisName else "Y"] or Vector3.yAxis,
 		bob = if type(bob) == "number" then bob else 0,
 		phase = math.random() * 2 * math.pi, -- para que no suban y bajen todas a la vez
 		resting = false,
 	}
+end
+
+-- Los modelos llegan al cliente por partes: se espera a que estén todas (el servidor dice cuántas)
+-- antes de moverlos, para que no queden descolocados.
+local function register(instance: Instance)
+	if not instance:IsA("PVInstance") then
+		return
+	end
+	local expected = instance:GetAttribute("SpinParts")
+	if instance:IsA("Model") and type(expected) == "number" then
+		task.spawn(function()
+			local waited = 0
+			while instance.Parent ~= nil and #instance:GetDescendants() < expected and waited < 10 do
+				waited += task.wait()
+			end
+			if instance.Parent ~= nil and #instance:GetDescendants() >= expected then
+				addEntry(instance)
+			end
+		end)
+	else
+		addEntry(instance)
+	end
 end
 
 local function unregister(instance: Instance)

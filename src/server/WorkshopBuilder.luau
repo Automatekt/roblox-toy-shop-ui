@@ -184,6 +184,10 @@ local function buildGear(parent: Instance, center: Vector3, radius: number, teet
 	gear.PrimaryPart = disc
 	gear:SetAttribute("SpinSpeed", speed)
 	gear:SetAttribute("SpinAxis", "Z")
+	-- Dónde está y cuántas piezas tiene: el cliente espera a tenerlas todas antes de hacerlo girar
+	-- (si empezara con el modelo a medio llegar, lo movería al centro del cuarto)
+	gear:SetAttribute("SpinBase", gear:GetPivot())
+	gear:SetAttribute("SpinParts", #gear:GetDescendants())
 	CollectionService:AddTag(gear, "Spin")
 	gear.Parent = parent
 end
