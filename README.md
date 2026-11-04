@@ -4,7 +4,7 @@ Pieza 2 del portafolio. Una tienda dentro de un taller de juguetes: catálogo de
 
 **Cómo se hizo:** el código se desarrolla dirigiendo a Claude (IA) y se verifica con pruebas en Roblox Studio. No está escrito a mano.
 
-**Estado:** construida y revisada por lectura; las pruebas en Studio están en la sección "Qué está probado y qué no".
+**Estado:** construida, revisada por lectura y probada en Studio (PC, emulador de celular y tableta, y pruebas de ataque al servidor). Lo que falta probar está en la sección "Qué está probado y qué no".
 
 ## Qué hace
 
@@ -13,7 +13,8 @@ Pieza 2 del portafolio. Una tienda dentro de un taller de juguetes: catálogo de
 - **Ganar monedas:** ocho fichas doradas repartidas por el taller (15 monedas cada una). Vuelven a aparecer solas a los 20 segundos. Sin tiempos que apuren.
 - **Pensado para niños:** botones y textos grandes, avisos amables que explican qué hacer ("Te faltan 40 monedas. ¡Junta fichas por el taller!"), sin cuentas regresivas, ofertas falsas, cajas de azar ni avisos que den culpa. Todo se compra solo con las monedas del juego.
 - **Animaciones suaves:** la ventana aparece con un rebote corto, las tarjetas entran una tras otra, se levantan al enfocarlas (cursor, toque o mando), saltan al comprar, el contador de monedas cuenta, y dos engranajes tenues giran muy despacio de fondo. Una opción de **menos movimiento** apaga los saltos, giros y engranajes.
-- **Sonidos suaves:** dos sonidos de volumen bajo (al recoger una ficha y al comprar), con un interruptor para apagarlos.
+- **Sonidos suaves:** de volumen bajo, al recoger una ficha, al comprar y al abrir o cerrar la tienda, con un interruptor para apagarlos.
+- **Cartel propio en el mostrador:** al acercarse aparece un cartel con los colores del taller (con la tecla E, la X del mando, o sin letra en celular, donde se toca el cartel), en vez del aviso estándar de Roblox.
 
 ## Decisiones de diseño
 
@@ -78,28 +79,37 @@ Pieza 2 del portafolio. Una tienda dentro de un taller de juguetes: catálogo de
 
 ## Sonidos
 
-Solo se usan dos audios de la biblioteca de efectos licenciada de Pro Sound Effects que Roblox ofrece en el Creator Store (cuenta verificada ProSoundEffects). No son audios creados por Roblox.
+Solo se usan dos audios (el de las llaves también, a otro tono, al abrir y cerrar) de la biblioteca de efectos licenciada de Pro Sound Effects que Roblox ofrece en el Creator Store (cuenta verificada ProSoundEffects). No son audios creados por Roblox.
 
 | Momento | ID | Nombre | Volumen |
 |---|---|---|---|
 | Recoger una ficha | `9116162487` | Key Dings Metal Clinking 3 (SFX) | 0.22 |
 | Comprar un juguete | `9113728042` | Cash Register 1 (SFX) | 0.3 |
+| Abrir la tienda | `9116162487` | el mismo de las llaves, más agudo y cortado a 0.45 s | 0.14 |
+| Cerrar la tienda | `9116162487` | el mismo, más grave y cortado a 0.4 s | 0.12 |
 
 Se verificó en la pieza 1 que estos audios cargan y suenan en Studio y en un juego publicado.
 
 ## Qué está probado y qué no
 
-**Hecho:**
-- El proyecto compila con Rojo.
-- Revisión de código por lectura con un revisor de solo lectura (ver abajo).
+**Probado en Roblox Studio:**
+- El proyecto compila con Rojo y la Salida no muestra errores de esta pieza (solo dos avisos propios de Studio: el guardado está desactivado en un lugar sin publicar, y un ícono de la interfaz de Studio).
+- **Ataques al servidor** (peticiones desde la barra de comandos, resultado idéntico al esperado): id inexistente, número, vacío, tabla y texto larguísimo como id, argumento de más, comprar lo que ya se tiene, comprar sin dinero, comprar dos veces seguidas (cooldown) y 12 peticiones de golpe (todas frenadas). Saldo final correcto: 300 - 80 - 10 - 10 - 10 = 190.
+- Recoger fichas, abrir la tienda con el botón y con el mostrador, elegir, comprar, avisos, etiquetas "¡Tuyo!" y "x3".
+- La ventana y sus textos en PC, en el emulador de celular (Samsung Galaxy A16 horizontal) y en el de tableta.
+- Cursor encima de una tarjeta (con mouse) y la opción de menos movimiento.
+- Sonidos al recoger una ficha y al comprar.
+- El techo y las paredes: la cámara no sale del taller en celular.
 
-**Sin probar todavía** (se irá completando con las pruebas en Studio):
-- Las validaciones del servidor con peticiones raras, spam y cooldown, desde la barra de comandos.
-- La ventana y sus textos en celular, tableta y PC, con el peor caso de texto.
-- Mouse (cursor encima), toque (elegir y confirmar) y mando (foco y botón B).
-- Las animaciones, la opción de menos movimiento y los sonidos.
+**Sin probar todavía:**
+- Mando (foco, botón A y botón B para cerrar).
+- Celular en vertical y los sonidos de abrir y cerrar de forma separada.
+- Las estanterías sólidas tras el último cambio.
+- La medida exacta del peor caso de texto (nombres largos) con `TextService`.
 - El guardado real de lo comprado (necesita el lugar publicado).
-- El rendimiento en un celular modesto.
+- El rendimiento en un celular modesto real.
+
+**Revisión de código:** un revisor de solo lectura leyó todo el código (sin hallazgos críticos ni altos) y se aplicaron sus arreglos.
 
 ## Límites conocidos
 
