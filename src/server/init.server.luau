@@ -3,8 +3,10 @@
 
 local DataService = require(script.DataService)
 local DataReplicator = require(script.DataReplicator)
+local ShopService = require(script.ShopService)
 
 -- Los servicios que reaccionan a la carga de datos se registran antes de cargar
 -- a nadie, para no perder a ningún jugador
 DataReplicator.start()
+ShopService.start()
 DataService.start()
