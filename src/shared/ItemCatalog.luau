@@ -1,6 +1,7 @@
 --!strict
--- Lista de objetos que existen en el juego. El servidor solo acepta ids de
--- esta lista, y el cliente la usa para mostrar los nombres.
+-- Los objetos que existen en el juego. El servidor solo acepta ids de esta lista,
+-- y el cliente la usa para mostrar los nombres. Los precios y las categorías de la
+-- tienda están aparte, en ShopCatalog.
 
 export type ItemInfo = {
 	DisplayName: string,
@@ -8,10 +9,16 @@ export type ItemInfo = {
 }
 
 local items: { [string]: ItemInfo } = {
-	Sword = { DisplayName = "Espada", MaxStack = 1 },
-	HealthPotion = { DisplayName = "Poción de vida", MaxStack = 99 },
-	Gem = { DisplayName = "Gema", MaxStack = 999 },
-	Key = { DisplayName = "Llave", MaxStack = 10 },
+	WindUpRobot = { DisplayName = "Robot de cuerda", MaxStack = 1 },
+	BrassRocket = { DisplayName = "Cohete de latón", MaxStack = 1 },
+	WoodTrain = { DisplayName = "Tren de madera", MaxStack = 1 },
+	LetterCube = { DisplayName = "Cubo de letras", MaxStack = 1 },
+	BlockTower = { DisplayName = "Torre de bloques", MaxStack = 1 },
+	PieceCastle = { DisplayName = "Castillo de piezas", MaxStack = 1 },
+	MarbleBag = { DisplayName = "Bolsa de canicas", MaxStack = 99 },
+	TeddyBear = { DisplayName = "Osito de peluche", MaxStack = 1 },
+	Bunny = { DisplayName = "Conejo de peluche", MaxStack = 1 },
+	PlushDragon = { DisplayName = "Dragón de peluche", MaxStack = 1 },
 }
 
 -- Congelado para que ningún script cambie el catálogo por accidente

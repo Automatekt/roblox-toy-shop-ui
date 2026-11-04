@@ -11,7 +11,7 @@ export type PlayerData = {
 
 local template: PlayerData = {
 	SchemaVersion = 1,
-	Coins = 0,
+	Coins = 300, -- monedas de inicio: alcanzan para empezar a comprar
 	Inventory = {},
 }
 
