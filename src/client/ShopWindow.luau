@@ -35,6 +35,11 @@ local CLOSE_ACTION = "CloseShop"
 local MIN_REQUEST_INTERVAL = 1.1 -- segundos entre dos compras desde este cliente: siempre más que el cooldown del servidor (1 s)
 local CONFIRM_DELAY = 0.6 -- el segundo toque cuenta como confirmación solo pasado este tiempo: un doble toque por costumbre no compra
 local TOAST_SECONDS = 2.6
+local MAX_WIDTH = 940
+local MAX_HEIGHT = 600
+local DESIGN_HEIGHT = 400 -- alto con el que todo cabe cómodo; en pantallas más bajas la ventana se encoge
+local MIN_FIT_SCALE = 0.6
+local SCREEN_FILL = 0.9 -- cuánto de la pantalla ocupa la ventana como máximo
 
 local ShopWindow = {}
 
@@ -49,34 +54,30 @@ function ShopWindow.start(hudGui: ScreenGui)
 	gui.ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets
 	gui.Enabled = false
 
-	-- Fondo que oscurece el taller y no deja pasar toques a lo que hay detrás
-	local dim = Instance.new("Frame")
-	dim.Name = "Dim"
-	dim.Size = UDim2.fromScale(1, 1)
-	dim.BackgroundColor3 = Theme.Ink
-	dim.BackgroundTransparency = 0.45
-	dim.BorderSizePixel = 0
-	dim.Active = true
-	dim.Parent = gui
+	-- Capa invisible: no oscurece nada, solo evita que un toque fuera de la ventana llegue al taller
+	local blocker = Instance.new("Frame")
+	blocker.Name = "Blocker"
+	blocker.Size = UDim2.fromScale(1, 1)
+	blocker.BackgroundTransparency = 1
+	blocker.BorderSizePixel = 0
+	blocker.Active = true
+	blocker.Parent = gui
 
 	local window = Instance.new("Frame")
 	window.Name = "Window"
 	window.AnchorPoint = Vector2.new(0.5, 0.5)
 	window.Position = UDim2.fromScale(0.5, 0.5)
-	window.Size = UDim2.fromScale(0.94, 0.9)
+	window.Size = UDim2.fromOffset(MAX_WIDTH, MAX_HEIGHT)
 	window.BackgroundColor3 = Theme.Cream
 	window.BorderSizePixel = 0
 	UiKit.corner(window, 20)
 	UiKit.stroke(window, 4)
 	window.Parent = gui
 
-	local limit = Instance.new("UISizeConstraint")
-	limit.MaxSize = Vector2.new(940, 600)
-	limit.MinSize = Vector2.new(280, 220)
-	limit.Parent = window
-
+	-- Escala de la ventana: encoge si la pantalla es baja (teléfono horizontal) y además da el saltito al abrir
 	local windowScale = Instance.new("UIScale")
 	windowScale.Parent = window
+	local fitScale = 1
 
 	-- Engranajes tenues de fondo, detrás de todo lo demás, girando muy despacio
 	local gears = {
@@ -478,8 +479,24 @@ function ShopWindow.start(hudGui: ScreenGui)
 		end
 	end)
 
+	-- Calcula el tamaño de la ventana: en pantallas bajas se encoge (fitScale) y se ensancha
+	-- su espacio interno para que el contenido siga cabiendo sin cortarse
+	local function applyFit()
+		local screen = gui.AbsoluteSize
+		if screen.X < 50 or screen.Y < 50 then
+			return
+		end
+		fitScale = math.clamp(screen.Y * SCREEN_FILL / DESIGN_HEIGHT, MIN_FIT_SCALE, 1)
+		window.Size = UDim2.fromOffset(
+			math.min(MAX_WIDTH, math.floor(screen.X * 0.96 / fitScale)),
+			math.min(MAX_HEIGHT, math.floor(screen.Y * SCREEN_FILL / fitScale))
+		)
+		windowScale.Scale = fitScale
+	end
+
 	-- Cerrar es rápido: no hay que esperar nada para volver al juego
 	local function close()
+		Sfx.play("Close")
 		gui.Enabled = false
 		stopBackground()
 		GuiService.SelectedObject = nil
@@ -509,10 +526,10 @@ function ShopWindow.start(hudGui: ScreenGui)
 			return
 		end
 		gui.Enabled = true
-		dim.BackgroundTransparency = 1
-		windowScale.Scale = 0.92
-		Motion.tween(dim, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0.45 })
-		Motion.tween(windowScale, TweenInfo.new(0.26, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
+		Sfx.play("Open")
+		applyFit()
+		windowScale.Scale = fitScale * 0.92
+		Motion.tween(windowScale, TweenInfo.new(0.26, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = fitScale })
 		setCategory(category)
 		refresh()
 		layoutBottom()
@@ -525,6 +542,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 	end
 
 	closeButton.Activated:Connect(close)
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyFit)
 	body:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutBody)
 	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutBottom)
 
