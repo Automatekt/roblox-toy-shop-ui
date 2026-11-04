@@ -127,6 +127,66 @@ function UiKit.blockButton(parent: Instance, text: string, textSize: number, col
 	return button
 end
 
+-- Interruptor con nombre: una palanquita que se mueve y cambia de color. Devuelve el botón.
+function UiKit.toggle(parent: Instance, labelText: string, initial: boolean, onChanged: (value: boolean) -> ()): TextButton
+	local button = UiKit.blockButton(parent, "", 16, Theme.Paper, Theme.Ink)
+	button.Size = UDim2.fromOffset(0, 40)
+	button.AutomaticSize = Enum.AutomaticSize.X
+
+	local padding = Instance.new("UIPadding")
+	padding.PaddingLeft = UDim.new(0, 10)
+	padding.PaddingRight = UDim.new(0, 14)
+	padding.Parent = button
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 8)
+	layout.Parent = button
+
+	local track = Instance.new("Frame")
+	track.LayoutOrder = 1
+	track.Size = UDim2.fromOffset(46, 24)
+	track.BorderSizePixel = 0
+	UiKit.round(track)
+	UiKit.stroke(track, 2)
+	track.Parent = button
+
+	local knob = Instance.new("Frame")
+	knob.AnchorPoint = Vector2.new(0, 0.5)
+	knob.Size = UDim2.fromOffset(18, 18)
+	knob.BackgroundColor3 = Theme.Paper
+	knob.BorderSizePixel = 0
+	UiKit.round(knob)
+	UiKit.stroke(knob, 2)
+	knob.Parent = track
+
+	local label = UiKit.label(button, labelText, 16, Theme.Ink, Theme.TitleFont)
+	label.LayoutOrder = 2
+	label.Size = UDim2.fromOffset(0, 24)
+	label.AutomaticSize = Enum.AutomaticSize.X
+	label.TextWrapped = false
+
+	local value = initial
+	local function render(animate: boolean)
+		track.BackgroundColor3 = if value then Theme.Mint else Theme.Wood:Lerp(Theme.Cream, 0.45)
+		local goal = UDim2.new(0, if value then 25 else 3, 0.5, 0)
+		if animate then
+			Motion.tween(knob, TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = goal })
+		else
+			knob.Position = goal
+		end
+	end
+	render(false)
+
+	button.Activated:Connect(function()
+		value = not value
+		render(true)
+		onChanged(value)
+	end)
+	return button
+end
+
 -- Efecto de pulsar: el botón se achica un poco mientras está apretado y vuelve al soltar.
 -- Funciona igual con mouse, dedo y mando (todos disparan el mismo evento de pulsación).
 function UiKit.pressable(button: GuiButton): UIScale

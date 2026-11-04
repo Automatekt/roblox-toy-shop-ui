@@ -18,12 +18,14 @@ local Theme = require(ReplicatedStorage.Shared.Theme)
 local GearDecor = require(script.Parent.GearDecor)
 local Motion = require(script.Parent.Motion)
 local PurchaseClient = require(script.Parent.PurchaseClient)
+local Sfx = require(script.Parent.Sfx)
 local ShopCard = require(script.Parent.ShopCard)
 local ShopDetail = require(script.Parent.ShopDetail)
 local UiKit = require(script.Parent.UiKit)
 
 local HEADER_HEIGHT = 44
-local BOTTOM_HEIGHT = 40
+local BOTTOM_ROW = 40 -- alto de cada fila de la barra de abajo
+local BOTTOM_NARROW_WIDTH = 400 -- por debajo de este ancho los interruptores van en dos filas
 local GAP = 10
 local TABS_WIDTH = 112
 local MIN_CARD_WIDTH = 108
@@ -120,7 +122,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 	local body = Instance.new("Frame")
 	body.Name = "Body"
 	body.Position = UDim2.fromOffset(0, HEADER_HEIGHT + 8)
-	body.Size = UDim2.new(1, 0, 1, -(HEADER_HEIGHT + 8 + BOTTOM_HEIGHT + 8))
+	body.Size = UDim2.new(1, 0, 1, -(HEADER_HEIGHT + 8 + BOTTOM_ROW + 8))
 	body.BackgroundTransparency = 1
 	body.Parent = content
 
@@ -128,7 +130,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 	bottomBar.Name = "BottomBar"
 	bottomBar.AnchorPoint = Vector2.new(0, 1)
 	bottomBar.Position = UDim2.fromScale(0, 1)
-	bottomBar.Size = UDim2.new(1, 0, 0, BOTTOM_HEIGHT)
+	bottomBar.Size = UDim2.new(1, 0, 0, BOTTOM_ROW)
 	bottomBar.BackgroundTransparency = 1
 	bottomBar.Parent = content
 
@@ -162,11 +164,28 @@ function ShopWindow.start(hudGui: ScreenGui)
 	gridLayout.CellSize = UDim2.fromOffset(MIN_CARD_WIDTH, 132)
 	gridLayout.Parent = grid
 
+	-- Interruptores de la barra de abajo: sonido y menos movimiento
+	local bottomLayout = Instance.new("UIListLayout")
+	bottomLayout.FillDirection = Enum.FillDirection.Horizontal
+	bottomLayout.Wraps = true
+	bottomLayout.Padding = UDim.new(0, 8)
+	bottomLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	bottomLayout.Parent = bottomBar
+
+	local soundToggle = UiKit.toggle(bottomBar, "Sonido", Sfx.isEnabled(), function(on: boolean)
+		Sfx.setEnabled(on)
+	end)
+	soundToggle.LayoutOrder = 1
+	local motionToggle = UiKit.toggle(bottomBar, "Menos movimiento", Motion.isReduced(), function(on: boolean)
+		Motion.setReduced(on)
+	end)
+	motionToggle.LayoutOrder = 2
+
 	-- Aviso corto de resultado, encima del cuerpo
 	local toast = Instance.new("Frame")
 	toast.Name = "Toast"
 	toast.AnchorPoint = Vector2.new(0.5, 1)
-	toast.Position = UDim2.new(0.5, 0, 1, -(BOTTOM_HEIGHT + 14))
+	toast.Position = UDim2.new(0.5, 0, 1, -8)
 	toast.Size = UDim2.fromOffset(0, 0)
 	toast.AutomaticSize = Enum.AutomaticSize.XY
 	toast.BackgroundColor3 = Theme.Mint
@@ -174,7 +193,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 	toast.ZIndex = 20
 	UiKit.round(toast)
 	UiKit.stroke(toast, 3)
-	toast.Parent = content
+	toast.Parent = body
 	local toastPadding = Instance.new("UIPadding")
 	toastPadding.PaddingLeft = UDim.new(0, 18)
 	toastPadding.PaddingRight = UDim.new(0, 18)
@@ -312,8 +331,11 @@ function ShopWindow.start(hudGui: ScreenGui)
 			local text, good = PurchaseClient.messageFor(result, info.DisplayName, missing)
 			showToast(text, good)
 			refresh()
-			if result == "Ok" and cards[itemId] then
-				cards[itemId].pop()
+			if result == "Ok" then
+				Sfx.play("Buy")
+				if cards[itemId] then
+					cards[itemId].pop()
+				end
 			end
 		end)
 	end
@@ -354,6 +376,14 @@ function ShopWindow.start(hudGui: ScreenGui)
 		local cardWidth = math.floor((usable - (columns - 1) * CARD_GAP) / columns)
 		local cardHeight = math.max(132, math.floor(cardWidth * 1.1))
 		gridLayout.CellSize = UDim2.fromOffset(cardWidth, cardHeight)
+	end
+
+	-- En pantallas muy angostas los interruptores pasan a dos filas y el cuerpo cede ese espacio
+	local function layoutBottom()
+		local narrow = content.AbsoluteSize.X > 0 and content.AbsoluteSize.X < BOTTOM_NARROW_WIDTH
+		local height = if narrow then BOTTOM_ROW * 2 + 8 else BOTTOM_ROW
+		bottomBar.Size = UDim2.new(1, 0, 0, height)
+		body.Size = UDim2.new(1, 0, 1, -(HEADER_HEIGHT + 8 + height + 8))
 	end
 
 	-- Dos disposiciones: ancha (tres columnas) y angosta (todo apilado)
@@ -478,6 +508,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 		Motion.tween(windowScale, TweenInfo.new(0.26, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
 		setCategory(category)
 		refresh()
+		layoutBottom()
 		layoutBody()
 		startBackground()
 		ContextActionService:BindAction(CLOSE_ACTION, onCloseAction, false, Enum.KeyCode.ButtonB)
@@ -488,6 +519,7 @@ function ShopWindow.start(hudGui: ScreenGui)
 
 	closeButton.Activated:Connect(close)
 	body:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutBody)
+	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutBottom)
 
 	-- Se mantiene al día con lo que el servidor deja en el PlayerGui de este jugador
 	playerGui:GetAttributeChangedSignal(DataAttributes.Coins):Connect(refresh)

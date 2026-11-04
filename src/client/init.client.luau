@@ -4,6 +4,7 @@
 local Players = game:GetService("Players")
 
 local CoinPill = require(script.CoinPill)
+local Sfx = require(script.Sfx)
 local ShopWindow = require(script.ShopWindow)
 local Spinner = require(script.Spinner)
 
@@ -15,6 +16,7 @@ hudGui.Name = "ShopHud"
 hudGui.ResetOnSpawn = false
 hudGui.ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets
 
+Sfx.start()
 Spinner.start()
 CoinPill.start(hudGui)
 ShopWindow.start(hudGui)

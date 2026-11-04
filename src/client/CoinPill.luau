@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 local DataAttributes = require(ReplicatedStorage.Shared.DataAttributes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local Motion = require(script.Parent.Motion)
+local Sfx = require(script.Parent.Sfx)
 local UiKit = require(script.Parent.UiKit)
 
 local PILL_HEIGHT = 48
@@ -111,6 +112,9 @@ function CoinPill.start(gui: ScreenGui)
 		end
 		local seconds = math.clamp(math.abs(coins - before) / 300, 0.3, 0.8)
 		countTween = Motion.tween(counter, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Value = coins })
+		if coins > before then
+			Sfx.play("Token")
+		end
 		if coins > before and not Motion.isReduced() then
 			bump.Scale = 1.12
 			Motion.tween(bump, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
