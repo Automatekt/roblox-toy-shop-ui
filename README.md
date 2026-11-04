@@ -100,7 +100,6 @@ Se verificó en la pieza 1 que estos audios cargan y suenan en Studio y en un ju
 - Cursor encima de una tarjeta (con mouse), la opción de menos movimiento y el mando (abrir la tienda, mover el foco, elegir, comprar, cambiar de categoría).
 - Los cuatro sonidos: ficha, compra, abrir y cerrar.
 - El techo y las paredes (la cámara no sale del taller en celular) y las estanterías sólidas.
-
 - **Guardado real con el lugar publicado (privado):** lo comprado y el saldo se conservan entre sesiones, en Studio y en el juego publicado.
 
 **Sin probar todavía:**
