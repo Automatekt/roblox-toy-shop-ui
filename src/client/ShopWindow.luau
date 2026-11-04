@@ -37,9 +37,11 @@ local CONFIRM_DELAY = 0.6 -- el segundo toque cuenta como confirmación solo pas
 local TOAST_SECONDS = 2.6
 local MAX_WIDTH = 940
 local MAX_HEIGHT = 600
-local DESIGN_HEIGHT = 400 -- alto con el que todo cabe cómodo; en pantallas más bajas la ventana se encoge
-local MIN_FIT_SCALE = 0.6
+local DESIGN_HEIGHT = 340 -- alto con el que todo cabe cómodo; en pantallas más bajas la ventana se encoge un poco
+local MIN_FIT_SCALE = 0.8 -- nunca más pequeña que esto: el texto tiene que seguir leyéndose
 local SCREEN_FILL = 0.9 -- cuánto de la pantalla ocupa la ventana como máximo
+local COMPACT_SCREEN_FILL = 0.96 -- en pantallas bajas (teléfono horizontal) aprovecha casi todo el alto
+local COMPACT_BELOW = 420 -- si el alto interno queda por debajo, se usan márgenes y filas más delgados
 
 local ShopWindow = {}
 
@@ -138,6 +140,10 @@ function ShopWindow.start(hudGui: ScreenGui)
 	body.Size = UDim2.new(1, 0, 1, -(HEADER_HEIGHT + 8 + BOTTOM_ROW + 8))
 	body.BackgroundTransparency = 1
 	body.Parent = content
+
+	-- Medidas que cambian en pantallas bajas (ver layoutChrome)
+	local headerH = HEADER_HEIGHT
+	local bottomRow = BOTTOM_ROW
 
 	local bottomBar = Instance.new("Frame")
 	bottomBar.Name = "BottomBar"
@@ -400,9 +406,29 @@ function ShopWindow.start(hudGui: ScreenGui)
 	-- En pantallas muy angostas los interruptores pasan a dos filas y el cuerpo cede ese espacio
 	local function layoutBottom()
 		local narrow = content.AbsoluteSize.X > 0 and content.AbsoluteSize.X < BOTTOM_NARROW_WIDTH
-		local height = if narrow then BOTTOM_ROW * 2 + 8 else BOTTOM_ROW
+		local height = if narrow then bottomRow * 2 + 8 else bottomRow
 		bottomBar.Size = UDim2.new(1, 0, 0, height)
-		body.Size = UDim2.new(1, 0, 1, -(HEADER_HEIGHT + 8 + height + 8))
+		body.Position = UDim2.fromOffset(0, headerH + 8)
+		body.Size = UDim2.new(1, 0, 1, -(headerH + 8 + height + 8))
+	end
+
+	-- Márgenes y filas más delgados cuando la pantalla es baja, para dejar sitio a los juguetes
+	local function layoutChrome(compact: boolean)
+		headerH = if compact then 40 else HEADER_HEIGHT
+		bottomRow = if compact then 40 else BOTTOM_ROW
+		local pad = if compact then 10 else 16
+		local inset = if compact then 5 else 7
+		content.Position = UDim2.fromOffset(pad, pad)
+		content.Size = UDim2.new(1, -2 * pad, 1, -2 * pad)
+		stitch.Position = UDim2.fromOffset(inset, inset)
+		stitch.Size = UDim2.new(1, -2 * inset, 1, -2 * inset)
+		header.Size = UDim2.new(1, 0, 0, headerH)
+		title.TextSize = if compact then 24 else 30
+		title.Size = UDim2.new(1, -(headerH + 16), 1, 0)
+		closeButton.Size = UDim2.fromOffset(headerH, headerH)
+		soundToggle.Size = UDim2.fromOffset(0, bottomRow)
+		motionToggle.Size = UDim2.fromOffset(0, bottomRow)
+		layoutBottom()
 	end
 
 	-- Dos disposiciones: ancha (tres columnas) y angosta (todo apilado)
@@ -497,12 +523,12 @@ function ShopWindow.start(hudGui: ScreenGui)
 		if screen.X < 50 or screen.Y < 50 then
 			return
 		end
-		local scale = math.clamp(screen.Y * SCREEN_FILL / DESIGN_HEIGHT, MIN_FIT_SCALE, 1)
+		local fill = if screen.Y < COMPACT_BELOW then COMPACT_SCREEN_FILL else SCREEN_FILL
+		local scale = math.clamp(screen.Y * fill / DESIGN_HEIGHT, MIN_FIT_SCALE, 1)
 		fitUiScale.Scale = scale
-		fit.Size = UDim2.fromOffset(
-			math.min(MAX_WIDTH, math.floor(screen.X * 0.96 / scale)),
-			math.min(MAX_HEIGHT, math.floor(screen.Y * SCREEN_FILL / scale))
-		)
+		local height = math.min(MAX_HEIGHT, math.floor(screen.Y * fill / scale))
+		fit.Size = UDim2.fromOffset(math.min(MAX_WIDTH, math.floor(screen.X * 0.96 / scale)), height)
+		layoutChrome(height < COMPACT_BELOW)
 	end
 
 	-- Cerrar es rápido: no hay que esperar nada para volver al juego

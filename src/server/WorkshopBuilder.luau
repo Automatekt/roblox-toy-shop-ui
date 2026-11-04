@@ -82,8 +82,7 @@ local function buildFloor(parent: Instance)
 	rug("RugInner", 10, 0.14, Theme.Sky)
 end
 
--- Cuatro paredes crema con friso de madera abajo, y vigas de techo (sin techo cerrado:
--- así entra la luz del día y la cámara no se tapa)
+-- Cuatro paredes crema con friso de madera abajo, vigas y techo
 local function buildWalls(parent: Instance)
 	local length = 2 * H + 2
 	local mid = WALL_HEIGHT / 2
@@ -101,6 +100,12 @@ local function buildWalls(parent: Instance)
 	for _, z in { -20, -10, 0, 10, 20 } do
 		newPart(parent, "Beam", Vector3.new(length, 0.8, 1), CFrame.new(0, WALL_HEIGHT + 0.4, z), Theme.WoodDark, Enum.Material.Wood, false)
 	end
+
+	-- Techo de madera sobre las vigas. No proyecta sombra, así el sol sigue entrando como antes,
+	-- y como es sólido la cámara no puede salir por arriba: se acerca en vez de mostrar el mapa vacío.
+	local roof = newPart(parent, "Roof", Vector3.new(length + 6, 1, length + 6), CFrame.new(0, WALL_HEIGHT + 1.3, 0), Theme.Wood:Lerp(Theme.Cream, 0.3), Enum.Material.WoodPlanks, true)
+	roof.CastShadow = false
+	roof.CanQuery = false
 end
 
 -- Ventanas en las paredes laterales, por encima de los estantes

@@ -40,6 +40,7 @@ local function build(prompt: ProximityPrompt, inputType: Enum.ProximityPromptInp
 	gui.AlwaysOnTop = true
 	gui.LightInfluence = 0
 	gui.ResetOnSpawn = false
+	gui.Active = true -- sin esto el cartel no recibe toques ni clics
 
 	local panel = Instance.new("Frame")
 	panel.Name = "Panel"
