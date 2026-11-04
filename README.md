@@ -97,12 +97,11 @@ Se verificó en la pieza 1 que estos audios cargan y suenan en Studio y en un ju
 - **Ataques al servidor** (peticiones desde la barra de comandos, resultado idéntico al esperado): id inexistente, número, vacío, tabla y texto larguísimo como id, argumento de más, comprar lo que ya se tiene, comprar sin dinero, comprar dos veces seguidas (cooldown) y 12 peticiones de golpe (todas frenadas). Saldo final correcto: 300 - 80 - 10 - 10 - 10 = 190.
 - Recoger fichas, abrir la tienda con el botón y con el mostrador, elegir, comprar, avisos, etiquetas "¡Tuyo!" y "x3".
 - La ventana y sus textos en PC, en el emulador de celular (Samsung Galaxy A16, en horizontal y en vertical) y en el de tableta.
-- Cursor encima de una tarjeta (con mouse) y la opción de menos movimiento.
+- Cursor encima de una tarjeta (con mouse), la opción de menos movimiento y el mando (abrir la tienda, mover el foco, elegir, comprar, cambiar de categoría).
 - Los cuatro sonidos: ficha, compra, abrir y cerrar.
 - El techo y las paredes (la cámara no sale del taller en celular) y las estanterías sólidas.
 
 **Sin probar todavía:**
-- Mando (foco, botón A y botón B para cerrar).
 - La medida exacta del peor caso de texto (nombres largos) con `TextService`.
 - El guardado real de lo comprado (necesita el lugar publicado).
 - El rendimiento en un celular modesto real.
