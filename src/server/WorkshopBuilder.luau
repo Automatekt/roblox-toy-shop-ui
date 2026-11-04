@@ -131,6 +131,7 @@ local function buildCounter(parent: Instance)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Abrir la tienda"
 	prompt.ObjectText = "Taller de juguetes"
+	prompt.Style = Enum.ProximityPromptStyle.Custom -- el cartelito lo dibuja el cliente (PromptUi) con los colores del taller
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 12
 	prompt.RequiresLineOfSight = false
