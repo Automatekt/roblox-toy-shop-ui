@@ -63,21 +63,32 @@ function ShopWindow.start(hudGui: ScreenGui)
 	blocker.Active = true
 	blocker.Parent = gui
 
+	-- Marco de ajuste: se encoge si la pantalla es baja (teléfono horizontal). Lleva su propia
+	-- escala, separada de la del saltito de apertura, para que las dos no se pisen.
+	local fit = Instance.new("Frame")
+	fit.Name = "Fit"
+	fit.AnchorPoint = Vector2.new(0.5, 0.5)
+	fit.Position = UDim2.fromScale(0.5, 0.5)
+	fit.Size = UDim2.fromOffset(MAX_WIDTH, MAX_HEIGHT)
+	fit.BackgroundTransparency = 1
+	fit.Parent = gui
+	local fitUiScale = Instance.new("UIScale")
+	fitUiScale.Parent = fit
+
 	local window = Instance.new("Frame")
 	window.Name = "Window"
 	window.AnchorPoint = Vector2.new(0.5, 0.5)
 	window.Position = UDim2.fromScale(0.5, 0.5)
-	window.Size = UDim2.fromOffset(MAX_WIDTH, MAX_HEIGHT)
+	window.Size = UDim2.fromScale(1, 1)
 	window.BackgroundColor3 = Theme.Cream
 	window.BorderSizePixel = 0
 	UiKit.corner(window, 20)
 	UiKit.stroke(window, 4)
-	window.Parent = gui
+	window.Parent = fit
 
-	-- Escala de la ventana: encoge si la pantalla es baja (teléfono horizontal) y además da el saltito al abrir
+	-- Escala del saltito al abrir
 	local windowScale = Instance.new("UIScale")
 	windowScale.Parent = window
-	local fitScale = 1
 
 	-- Engranajes tenues de fondo, detrás de todo lo demás, girando muy despacio
 	local gears = {
@@ -479,19 +490,19 @@ function ShopWindow.start(hudGui: ScreenGui)
 		end
 	end)
 
-	-- Calcula el tamaño de la ventana: en pantallas bajas se encoge (fitScale) y se ensancha
+	-- Calcula el tamaño de la ventana: en pantallas bajas se encoge y se ensancha
 	-- su espacio interno para que el contenido siga cabiendo sin cortarse
 	local function applyFit()
 		local screen = gui.AbsoluteSize
 		if screen.X < 50 or screen.Y < 50 then
 			return
 		end
-		fitScale = math.clamp(screen.Y * SCREEN_FILL / DESIGN_HEIGHT, MIN_FIT_SCALE, 1)
-		window.Size = UDim2.fromOffset(
-			math.min(MAX_WIDTH, math.floor(screen.X * 0.96 / fitScale)),
-			math.min(MAX_HEIGHT, math.floor(screen.Y * SCREEN_FILL / fitScale))
+		local scale = math.clamp(screen.Y * SCREEN_FILL / DESIGN_HEIGHT, MIN_FIT_SCALE, 1)
+		fitUiScale.Scale = scale
+		fit.Size = UDim2.fromOffset(
+			math.min(MAX_WIDTH, math.floor(screen.X * 0.96 / scale)),
+			math.min(MAX_HEIGHT, math.floor(screen.Y * SCREEN_FILL / scale))
 		)
-		windowScale.Scale = fitScale
 	end
 
 	-- Cerrar es rápido: no hay que esperar nada para volver al juego
@@ -528,8 +539,8 @@ function ShopWindow.start(hudGui: ScreenGui)
 		gui.Enabled = true
 		Sfx.play("Open")
 		applyFit()
-		windowScale.Scale = fitScale * 0.92
-		Motion.tween(windowScale, TweenInfo.new(0.26, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = fitScale })
+		windowScale.Scale = 0.92
+		Motion.tween(windowScale, TweenInfo.new(0.26, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 })
 		setCategory(category)
 		refresh()
 		layoutBottom()
