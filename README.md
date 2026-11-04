@@ -101,9 +101,10 @@ Se verificó en la pieza 1 que estos audios cargan y suenan en Studio y en un ju
 - Los cuatro sonidos: ficha, compra, abrir y cerrar.
 - El techo y las paredes (la cámara no sale del taller en celular) y las estanterías sólidas.
 
+- **Guardado real con el lugar publicado (privado):** lo comprado y el saldo se conservan entre sesiones, en Studio y en el juego publicado.
+
 **Sin probar todavía:**
 - La medida exacta del peor caso de texto (nombres largos) con `TextService`.
-- El guardado real de lo comprado (necesita el lugar publicado).
 - El rendimiento en un celular modesto real.
 
 **Revisión de código:** un revisor de solo lectura leyó todo el código (sin hallazgos críticos ni altos) y se aplicaron sus arreglos.
