@@ -4,6 +4,8 @@ Pieza 2 del portafolio. Una tienda dentro de un taller de juguetes: catálogo de
 
 **Cómo se hizo:** el código se desarrolla dirigiendo a Claude (IA) y se verifica con pruebas en Roblox Studio. No está escrito a mano.
 
+**Video de demostración:** [ver en YouTube](https://youtu.be/S5WMrY0jCQA) (solo versión de PC; los textos del video están en inglés).
+
 **Estado:** construida, revisada por lectura y probada en Studio (PC, emulador de celular y tableta, y pruebas de ataque al servidor). Lo que falta probar está en la sección "Qué está probado y qué no".
 
 ## Qué hace
